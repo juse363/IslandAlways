@@ -1,0 +1,39 @@
+name: Build VisibleIsland (baseline)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build.yml"
+      - "README.md"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Check out IslandAlways
+        uses: actions/checkout@v4
+
+      - name: Set up Theos
+        uses: theos/setup-theos@v1
+
+      - name: Fetch upstream VisibleIsland source
+        run: |
+          git clone --depth 1 https://github.com/ethxnn88/VisibleIsland.git upstream/VisibleIsland
+
+      - name: Build upstream baseline package
+        working-directory: upstream/VisibleIsland
+        run: |
+          make package FINALPACKAGE=1
+
+      - name: Upload Debian packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: visibleisland-deb
+          path: upstream/VisibleIsland/packages/*.deb
+          if-no-files-found: error
+          retention-days: 14
